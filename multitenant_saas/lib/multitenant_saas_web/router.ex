@@ -1,5 +1,6 @@
 defmodule MultitenantSaasWeb.Router do
   use MultitenantSaasWeb, :router
+  use Phoenix.Router
 
   import MultitenantSaasWeb.PlatformUserAuth
 
@@ -17,6 +18,18 @@ defmodule MultitenantSaasWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :load_tenant do
+    plug MultitenantSaasWeb.Plugs.LoadTenant
+  end
+
+  pipeline :dev do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+  end
+
   scope "/", MultitenantSaasWeb do
     pipe_through :browser
 
@@ -30,15 +43,10 @@ defmodule MultitenantSaasWeb.Router do
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:multitenant_saas, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
-      pipe_through :browser
+      pipe_through [:browser, :load_tenant, :dev]
 
       live_dashboard "/dashboard", metrics: MultitenantSaasWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview

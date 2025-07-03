@@ -51,7 +51,14 @@ config :tailwind,
       --output=../priv/static/assets/app.css
     ),
     cd: Path.expand("../assets", __DIR__)
-  ]
+    ]
+
+  # Configure Triplex
+  config :triplex,
+    repo: MultitenantSaas.Repo,
+    tenant_otp_app: :multitenant_saas,
+    default_tenant: "public",
+    reserved_tenants: ["public"]
 
 # Configures Elixir's Logger
 config :logger, :console,
